@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Domain Map</title>
+<script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+:root{--bg:#111826;--card:#172030;--border:#1e2a3a;--pri:#5a82b5;--sec:#c4785a;--pos:#5a9fc4;--neg:#c45a5a;--done:#4a9a6a;--warn:#c4a85a;--text:#d0d7de;--dim:#8b95a5;--muted:#6b7585;--tree-line:#2a3a4a}
+[data-theme="light"]{--bg:#f5f7fa;--card:#ffffff;--border:#dce1e8;--text:#1a2332;--dim:#5a6878;--muted:#8494a7;--done:#3a8a5a;--warn:#a48a3a;--tree-line:#c5cdd8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:24px 28px 48px;transition:background .3s,color .3s}
+#loading{display:flex;align-items:center;justify-content:center;height:60vh;flex-direction:column;gap:12px}
+.spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--pri);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{color:var(--dim);font-size:13px}
+#dash{display:none}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
+.sub{font-size:13px;color:var(--dim);margin-top:4px}
+.theme-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--dim);font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px}
+.theme-btn:hover{border-color:var(--pri);color:var(--text)}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;flex:1 1 0;min-width:100px}
+.sc-l{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--dim);margin-bottom:4px}
+.sc-v{font-size:22px;font-weight:700;line-height:1.1}
+.trees{display:flex;flex-direction:column;gap:16px}
+.tree-root{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;transition:background .3s,border-color .3s}
+.tree-site{font-size:11px;color:var(--dim);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.tree-site-name{font-weight:600;color:var(--pri)}
+.primary-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.primary-domain{font-size:17px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
+.role-tag{font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.role-primary{background:rgba(90,130,181,.12);color:var(--pri)}
+.role-redirect{background:rgba(196,120,90,.1);color:var(--sec)}
+.role-shortener{background:rgba(74,154,106,.12);color:var(--done)}
+.dns-tag{font-size:9px;padding:2px 6px;border-radius:3px;color:var(--muted);background:rgba(139,149,165,.06);border:1px solid var(--border)}
+.branches{margin-top:8px;padding-left:24px;border-left:2px solid var(--tree-line)}
+.branch{position:relative;padding:6px 0 6px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.branch::before{content:'';position:absolute;left:-2px;top:50%;width:18px;height:0;border-top:2px solid var(--tree-line)}
+.branch-domain{font-size:13px;font-family:'DM Mono',monospace;font-weight:500;color:var(--text)}
+.branch-target{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.branch-arrow{color:var(--muted);font-size:11px}
+.orphan-section{margin-top:24px}
+.orphan-hdr{font-size:15px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.orphan-hdr svg{opacity:.85}
+.parked-grid{display:flex;flex-wrap:wrap;gap:6px}
+.parked-tag{font-size:12px;font-family:'DM Mono',monospace;padding:5px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border);color:var(--dim)}
+.footer{margin-top:28px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+.ext-link{color:var(--warn);font-style:italic}
+.no-site{color:var(--muted);font-style:italic;font-size:11px}
+.count-badge{font-size:11px;color:var(--muted);font-weight:400}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div><p>Connecting to Grist…</p></div>
+<div id="dash">
+<div class="hdr"><div><h1>Domain Map</h1><div class="sub" id="sub"></div></div>
+<button class="theme-btn" id="themeBtn" onclick="cycleTheme()"></button></div>
+<div class="stats" id="topStats"></div>
+<div class="trees" id="trees"></div>
+<div class="orphan-section" id="orphanSection"></div>
+<div class="footer"><div>Domain Map</div><div id="ftr"></div></div>
+</div>
+<script>
+let DATA=null;
+function getThemePref(){return localStorage.getItem('site-dash-theme')||'auto'}
+function resolveTheme(p){if(p==='light'||p==='dark')return p;return matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}
+function applyTheme(){const p=getThemePref(),r=resolveTheme(p);document.documentElement.setAttribute('data-theme',r);const L={auto:'Auto',light:'Light',dark:'Dark'},I={auto:'\u2728',light:'\u2600\ufe0f',dark:'\ud83c\udf19'};document.getElementById('themeBtn').textContent=I[p]+' '+L[p];if(DATA)render(DATA)}
+function cycleTheme(){const o=['auto','light','dark'],c=getThemePref();localStorage.setItem('site-dash-theme',o[(o.indexOf(c)+1)%3]);applyTheme()}
+applyTheme();
+function toRows(t){const ks=Object.keys(t).filter(k=>k!=='id'&&k!=='manualSort');const r=[];for(let i=0;i<(t.id?.length||0);i++){const o={_id:t.id[i]};ks.forEach(k=>o[k]=t[k][i]);r.push(o)}return r}
+
+grist.ready({requiredAccess:'full'});
+async function load(){
+  try{
+    const[sites,domains]=await Promise.all([
+      grist.docApi.fetchTable('Sites'),
+      grist.docApi.fetchTable('Domains')
+    ]);
+    DATA={sites:toRows(sites),domains:toRows(domains)};
+    document.getElementById('loading').style.display='none';
+    document.getElementById('dash').style.display='block';
+    render(DATA);
+  }catch(e){document.querySelector('#loading p').textContent='Error: '+e.message}
+}
+load();grist.onRecords(()=>load());
+
+function render(D){
+  const{sites,domains}=D;
+  const siteMap={};sites.forEach(s=>siteMap[s._id]=s);
+
+  const primaries=domains.filter(d=>d.Role==='Primary');
+  const redirects=domains.filter(d=>d.Role==='Redirect');
+  const shorteners=domains.filter(d=>d.Role==='URL Shortener');
+  const parked=domains.filter(d=>d.Role==='Parked');
+  const unassigned=domains.filter(d=>!d.Role);
+
+  document.getElementById('sub').textContent=`${domains.length} domains \u2022 ${primaries.length} primary \u2022 ${redirects.length} redirects \u2022 ${shorteners.length} shorteners \u2022 ${parked.length} parked`;
+
+  document.getElementById('topStats').innerHTML=[
+    `<div class="sc"><div class="sc-l">Primary</div><div class="sc-v" style="color:var(--pri)">${primaries.length}</div></div>`,
+    `<div class="sc"><div class="sc-l">Redirects</div><div class="sc-v" style="color:var(--sec)">${redirects.length}</div></div>`,
+    `<div class="sc"><div class="sc-l">Shorteners</div><div class="sc-v" style="color:var(--done)">${shorteners.length}</div></div>`,
+    `<div class="sc"><div class="sc-l">Parked</div><div class="sc-v" style="color:var(--dim)">${parked.length}</div></div>`,
+  ].join('');
+
+  // Group redirects and shorteners by site
+  const bySite={};
+  [...redirects,...shorteners].forEach(d=>{
+    const key=d.Site||0;
+    if(!bySite[key])bySite[key]=[];
+    bySite[key].push(d);
+  });
+
+  // Build trees: each primary domain is a root, children are redirects/shorteners sharing the same site
+  let treesHtml='';
+  const sortedPrimaries=primaries.slice().sort((a,b)=>{
+    const ac=(bySite[a.Site]||[]).length;
+    const bc=(bySite[b.Site]||[]).length;
+    return bc-ac; // most children first
+  });
+
+  const handledSites=new Set();
+
+  sortedPrimaries.forEach(pri=>{
+    const site=siteMap[pri.Site];
+    const children=(bySite[pri.Site]||[]).sort((a,b)=>(a.Domain||'').localeCompare(b.Domain||''));
+    handledSites.add(pri.Site);
+
+    treesHtml+=`<div class="tree-root">`;
+    if(site){
+      treesHtml+=`<div class="tree-site"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg> <span class="tree-site-name">${site.Name}</span></div>`;
+    }else{
+      treesHtml+=`<div class="tree-site"><span class="no-site">No site assigned</span></div>`;
+    }
+    treesHtml+=`<div class="primary-row">
+      <span class="primary-domain">${pri.Domain}</span>
+      <span class="role-tag role-primary">Primary</span>
+      <span class="dns-tag">${pri.DNS_Provider||'—'}</span>
+      ${children.length?`<span class="count-badge">${children.length} linked</span>`:''}
+    </div>`;
+
+    if(children.length){
+      treesHtml+=`<div class="branches">`;
+      children.forEach(ch=>{
+        const roleClass=ch.Role==='Redirect'?'role-redirect':'role-shortener';
+        const roleLabel=ch.Role==='URL Shortener'?'Shortener':ch.Role;
+        let targetHtml='';
+        if(ch.Redirect_URL){
+          const isExternal=!domains.some(d=>ch.Redirect_URL.includes(d.Domain));
+          targetHtml=`<span class="branch-arrow">\u2192</span> <span class="branch-target${isExternal?' ext-link':''}">${ch.Redirect_URL}</span>`;
+        }
+        treesHtml+=`<div class="branch">
+          <span class="branch-domain">${ch.Domain}</span>
+          <span class="role-tag ${roleClass}">${roleLabel}</span>
+          <span class="dns-tag">${ch.DNS_Provider||'—'}</span>
+          ${targetHtml}
+        </div>`;
+      });
+      treesHtml+=`</div>`;
+    }
+    treesHtml+=`</div>`;
+  });
+
+  // Handle redirects/shorteners linked to sites that have no primary domain
+  Object.keys(bySite).forEach(siteKey=>{
+    const sk=parseInt(siteKey);
+    if(handledSites.has(sk)||sk===0)return;
+    const children=bySite[sk];
+    const site=siteMap[sk];
+    treesHtml+=`<div class="tree-root">`;
+    treesHtml+=`<div class="tree-site"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg> <span class="tree-site-name">${site?site.Name:'Unknown'}</span> <span class="no-site">(no primary domain)</span></div>`;
+    treesHtml+=`<div class="branches" style="border-left-color:var(--warn)">`;
+    children.forEach(ch=>{
+      const roleClass=ch.Role==='Redirect'?'role-redirect':'role-shortener';
+      const roleLabel=ch.Role==='URL Shortener'?'Shortener':ch.Role;
+      treesHtml+=`<div class="branch">
+        <span class="branch-domain">${ch.Domain}</span>
+        <span class="role-tag ${roleClass}">${roleLabel}</span>
+      </div>`;
+    });
+    treesHtml+=`</div></div>`;
+  });
+
+  // Unlinked redirects/shorteners (site = 0)
+  const unlinked=bySite[0]||[];
+  if(unlinked.length){
+    treesHtml+=`<div class="tree-root" style="border-color:var(--warn)">
+      <div class="tree-site"><span class="no-site">\u26a0 Redirects/shorteners not linked to any site</span></div>
+      <div class="branches" style="border-left-color:var(--warn)">`;
+    unlinked.forEach(ch=>{
+      const roleClass=ch.Role==='Redirect'?'role-redirect':'role-shortener';
+      const roleLabel=ch.Role==='URL Shortener'?'Shortener':ch.Role;
+      let targetHtml='';
+      if(ch.Redirect_URL){
+        targetHtml=`<span class="branch-arrow">\u2192</span> <span class="branch-target ext-link">${ch.Redirect_URL}</span>`;
+      }
+      treesHtml+=`<div class="branch">
+        <span class="branch-domain">${ch.Domain}</span>
+        <span class="role-tag ${roleClass}">${roleLabel}</span>
+        ${targetHtml}
+      </div>`;
+    });
+    treesHtml+=`</div></div>`;
+  }
+
+  document.getElementById('trees').innerHTML=treesHtml;
+
+  // Parked + unassigned
+  let orphanHtml='';
+  if(parked.length){
+    orphanHtml+=`<div class="orphan-hdr"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 010 6H9"/></svg> Parked Domains <span class="count-badge">${parked.length}</span></div>
+    <div class="parked-grid">${parked.sort((a,b)=>a.Domain.localeCompare(b.Domain)).map(d=>`<span class="parked-tag">${d.Domain}</span>`).join('')}</div>`;
+  }
+  if(unassigned.length){
+    orphanHtml+=`<div class="orphan-hdr" style="margin-top:20px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> No Role Assigned <span class="count-badge">${unassigned.length}</span></div>
+    <div class="parked-grid">${unassigned.sort((a,b)=>a.Domain.localeCompare(b.Domain)).map(d=>`<span class="parked-tag" style="border-color:var(--warn)">${d.Domain}</span>`).join('')}</div>`;
+  }
+  document.getElementById('orphanSection').innerHTML=orphanHtml;
+  document.getElementById('ftr').textContent=`${domains.length} domains \u2022 ${primaries.length} trees`;
+}
+</script>
+</body>
+</html>
