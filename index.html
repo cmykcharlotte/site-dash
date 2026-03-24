@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Site Tracker Overview</title>
+<script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+:root{--bg:#111826;--card:#172030;--border:#1e2a3a;--pri:#5a82b5;--sec:#c4785a;--pos:#5a9fc4;--neg:#c45a5a;--done:#4a9a6a;--warn:#c4a85a;--text:#d0d7de;--dim:#8b95a5;--muted:#6b7585}
+[data-theme="light"]{--bg:#f5f7fa;--card:#ffffff;--border:#dce1e8;--text:#1a2332;--dim:#5a6878;--muted:#8494a7;--done:#3a8a5a;--warn:#a48a3a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:24px 28px 48px;transition:background .3s,color .3s}
+#loading{display:flex;align-items:center;justify-content:center;height:60vh;flex-direction:column;gap:12px}
+.spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--pri);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{color:var(--dim);font-size:13px}
+#dash{display:none}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
+.sub{font-size:13px;color:var(--dim);margin-top:4px}
+.theme-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--dim);font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px}
+.theme-btn:hover{border-color:var(--pri);color:var(--text)}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;flex:1 1 0;min-width:120px;transition:background .3s,border-color .3s}
+.sc-l{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--dim);margin-bottom:6px}
+.sc-v{font-size:26px;font-weight:700;line-height:1.1}
+.sc-s{font-size:11px;color:var(--muted);margin-top:4px}
+.stitle{display:flex;align-items:center;gap:8px;margin:28px 0 14px;font-size:15px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.stitle svg{flex-shrink:0;opacity:.85}
+.two{display:flex;gap:14px;flex-wrap:wrap}.two>.half{flex:1 1 300px}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;transition:background .3s,border-color .3s}
+.mono{font-family:'DM Mono',monospace}
+.footer{margin-top:28px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+.server-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;transition:background .3s,border-color .3s}
+.server-name{font-size:16px;font-weight:700;margin-bottom:2px}
+.server-meta{font-size:11px;color:var(--dim);margin-bottom:10px}
+.server-sites{display:flex;flex-direction:column;gap:6px}
+.ssite{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(90,130,181,.04);border-radius:6px;font-size:12px}
+.ssite-name{font-weight:600}
+.ssite-url{font-size:11px;color:var(--dim);font-family:'DM Mono',monospace}
+.ssite-badges{display:flex;gap:6px;align-items:center}
+.badge{font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.badge-live{background:rgba(74,154,106,.12);color:var(--done)}
+.badge-dev{background:rgba(90,130,181,.12);color:var(--pri)}
+.badge-internal{background:rgba(196,168,90,.1);color:var(--warn)}
+.badge-active{background:rgba(90,159,196,.1);color:var(--pos)}
+.badge-demo{background:rgba(196,168,90,.1);color:var(--warn)}
+.badge-inactive{background:rgba(139,149,165,.08);color:var(--muted)}
+.config-pct{font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
+.domain-group{margin-bottom:14px}
+.domain-group-hdr{font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.domain-group-count{font-size:11px;color:var(--dim);font-weight:400}
+.domain-list{display:flex;flex-wrap:wrap;gap:4px}
+.domain-tag{font-size:11px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px;background:rgba(90,130,181,.06);border:1px solid var(--border);color:var(--dim)}
+.config-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.config-row:last-child{border-bottom:none}
+.config-item-name{font-size:13px;font-weight:600}
+.config-bar-wrap{display:flex;align-items:center;gap:8px;min-width:200px}
+.config-bar{background:var(--border);border-radius:4px;height:8px;flex:1;overflow:hidden}
+.config-bar-fill{height:100%;border-radius:4px;transition:width .3s}
+.config-bar-label{font-size:11px;font-family:'DM Mono',monospace;color:var(--dim);min-width:45px;text-align:right}
+.needs-attn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.needs-attn-name{font-size:13px;font-weight:600}
+.needs-attn-url{font-size:11px;color:var(--dim);font-family:'DM Mono',monospace}
+.needs-attn-score{font-size:12px;font-weight:700;font-family:'DM Mono',monospace}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div><p>Connecting to Grist…</p></div>
+<div id="dash">
+<div class="hdr"><div><h1>Master Site Tracker</h1><div class="sub" id="sub"></div></div>
+<button class="theme-btn" id="themeBtn" onclick="cycleTheme()"></button></div>
+<div class="stats" id="topStats"></div>
+
+<div class="two">
+<div class="half">
+<div class="stitle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg> Sites per Server</div>
+<div id="serverCards"></div>
+</div>
+<div class="half">
+<div class="stitle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Config Completion by Item</div>
+<div class="cc" id="configBars"></div>
+
+<div class="stitle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Needs Attention</div>
+<div id="needsAttention"></div>
+</div>
+</div>
+
+<div class="stitle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg> Domain Inventory</div>
+<div class="cc" id="domainInventory"></div>
+
+<div class="footer"><div>Overview Dashboard</div><div id="ftr"></div></div>
+</div>
+<script>
+let DATA=null;
+function getThemePref(){return localStorage.getItem('site-dash-theme')||'auto'}
+function resolveTheme(p){if(p==='light'||p==='dark')return p;return matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}
+function applyTheme(){const p=getThemePref(),r=resolveTheme(p);document.documentElement.setAttribute('data-theme',r);const L={auto:'Auto',light:'Light',dark:'Dark'},I={auto:'\u2728',light:'\u2600\ufe0f',dark:'\ud83c\udf19'};document.getElementById('themeBtn').textContent=I[p]+' '+L[p];if(DATA)render(DATA)}
+function cycleTheme(){const o=['auto','light','dark'],c=getThemePref();localStorage.setItem('site-dash-theme',o[(o.indexOf(c)+1)%3]);applyTheme()}
+applyTheme();
+function toRows(t){const ks=Object.keys(t).filter(k=>k!=='id'&&k!=='manualSort');const r=[];for(let i=0;i<(t.id?.length||0);i++){const o={_id:t.id[i]};ks.forEach(k=>o[k]=t[k][i]);r.push(o)}return r}
+
+grist.ready({requiredAccess:'full'});
+async function load(){
+  try{
+    const[sites,servers,domains,configs,statuses]=await Promise.all([
+      grist.docApi.fetchTable('Sites'),
+      grist.docApi.fetchTable('Servers'),
+      grist.docApi.fetchTable('Domains'),
+      grist.docApi.fetchTable('Config_Items'),
+      grist.docApi.fetchTable('Config_Status')
+    ]);
+    DATA={sites:toRows(sites),servers:toRows(servers),domains:toRows(domains),configs:toRows(configs),statuses:toRows(statuses)};
+    document.getElementById('loading').style.display='none';
+    document.getElementById('dash').style.display='block';
+    render(DATA);
+  }catch(e){document.querySelector('#loading p').textContent='Error: '+e.message}
+}
+load();grist.onRecords(()=>load());
+
+function sc(l,v,s,c){return`<div class="sc"><div class="sc-l">${l}</div><div class="sc-v" style="color:${c||'var(--text)'}">${v}</div>${s?`<div class="sc-s">${s}</div>`:''}</div>`}
+
+function render(D){
+  const{sites,servers,domains,configs,statuses}=D;
+  const serverMap={};servers.forEach(s=>serverMap[s._id]=s);
+
+  // Status map
+  const siteStatus={};
+  statuses.forEach(st=>{
+    if(!siteStatus[st.Site])siteStatus[st.Site]={done:0,total:0,needsUpdate:0};
+    siteStatus[st.Site].total++;
+    if(st.Status==='Done')siteStatus[st.Site].done++;
+    if(st.Status==='Needs Update')siteStatus[st.Site].needsUpdate++;
+  });
+
+  const totalDone=Object.values(siteStatus).reduce((s,v)=>s+v.done,0);
+  const totalAll=Object.values(siteStatus).reduce((s,v)=>s+v.total,0);
+  const totalNeedsUpdate=Object.values(siteStatus).reduce((s,v)=>s+v.needsUpdate,0);
+  const pctDone=totalAll>0?Math.round(totalDone/totalAll*100):0;
+
+  const liveSites=sites.filter(s=>s.Site_Type==='Live').length;
+  const devSites=sites.filter(s=>s.Site_Type==='Dev').length;
+  const intSites=sites.filter(s=>s.Site_Type==='Internal').length;
+  const primaryDomains=domains.filter(d=>d.Role==='Primary').length;
+  const parkedDomains=domains.filter(d=>d.Role==='Parked').length;
+
+  document.getElementById('sub').textContent=`${sites.length} sites \u2022 ${servers.length} servers \u2022 ${domains.length} domains`;
+
+  document.getElementById('topStats').innerHTML=[
+    sc('Sites',sites.length,`${liveSites} live \u2022 ${devSites} dev \u2022 ${intSites} internal`,'var(--pri)'),
+    sc('Domains',domains.length,`${primaryDomains} primary \u2022 ${parkedDomains} parked`,'var(--sec)'),
+    sc('Config Done',pctDone+'%',`${totalDone}/${totalAll} items`,'var(--done)'),
+    sc('Needs Update',totalNeedsUpdate,totalNeedsUpdate>0?'items across all sites':'all clear',totalNeedsUpdate>0?'var(--warn)':'var(--done)')
+  ].join('');
+
+  // Sites per server
+  let serverHtml='';
+  servers.forEach(srv=>{
+    const srvSites=sites.filter(s=>s.Server===srv._id).sort((a,b)=>(a.Name||'').localeCompare(b.Name||''));
+    serverHtml+=`<div class="server-card">
+      <div class="server-name">${srv.Name}</div>
+      <div class="server-meta">${srv.Provider} \u2022 ${srv.IP_Address||''} \u2022 ${srv.Region||''} \u2022 ${srvSites.length} site${srvSites.length!==1?'s':''}</div>
+      <div class="server-sites">`;
+    srvSites.forEach(s=>{
+      const ss=siteStatus[s._id]||{done:0,total:0};
+      const pct=ss.total>0?Math.round(ss.done/ss.total*100):0;
+      const scoreColor=pct===100?'var(--done)':pct>=50?'var(--warn)':'var(--neg)';
+      const badgeClass=s.Site_Type==='Live'?'badge-live':s.Site_Type==='Dev'?'badge-dev':'badge-internal';
+      const xcloudClass=s.xCloud_Status==='Active'?'badge-active':s.xCloud_Status==='Demo'?'badge-demo':'badge-inactive';
+      serverHtml+=`<div class="ssite">
+        <div><span class="ssite-name">${s.Name||'Unnamed'}</span> <span class="ssite-url">${s.Primary_URL||''}</span></div>
+        <div class="ssite-badges">
+          <span class="badge ${badgeClass}">${s.Site_Type||''}</span>
+          <span class="badge ${xcloudClass}">${s.xCloud_Status||''}</span>
+          <span class="config-pct" style="color:${scoreColor}">${ss.done}/${ss.total}</span>
+        </div>
+      </div>`;
+    });
+    serverHtml+=`</div></div>`;
+  });
+  document.getElementById('serverCards').innerHTML=serverHtml;
+
+  // Config completion by item
+  let cbHtml='';
+  configs.forEach(ci=>{
+    const itemStatuses=statuses.filter(st=>st.Config_Item===ci._id);
+    const done=itemStatuses.filter(st=>st.Status==='Done').length;
+    const total=itemStatuses.length;
+    const pct=total>0?Math.round(done/total*100):0;
+    const barColor=pct===100?'var(--done)':pct>=50?'var(--warn)':'var(--neg)';
+    cbHtml+=`<div class="config-row">
+      <div><span class="config-item-name">${ci.Name}</span> <span class="badge" style="background:rgba(139,149,165,.08);color:var(--dim)">${ci.Level}</span></div>
+      <div class="config-bar-wrap">
+        <div class="config-bar"><div class="config-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+        <span class="config-bar-label">${done}/${total}</span>
+      </div>
+    </div>`;
+  });
+  document.getElementById('configBars').innerHTML=cbHtml;
+
+  // Needs attention — sites with lowest config completion or needs-update items
+  const attnSites=sites.map(s=>{
+    const ss=siteStatus[s._id]||{done:0,total:0,needsUpdate:0};
+    return{...s,done:ss.done,total:ss.total,needsUpdate:ss.needsUpdate,pct:ss.total>0?ss.done/ss.total:1};
+  }).filter(s=>s.pct<1||s.needsUpdate>0).sort((a,b)=>a.pct-b.pct).slice(0,10);
+
+  let attnHtml='';
+  if(!attnSites.length){
+    attnHtml='<div style="padding:12px;color:var(--done);font-size:13px">All sites fully configured!</div>';
+  }else{
+    attnSites.forEach(s=>{
+      const scoreColor=s.pct>=1?'var(--done)':s.pct>=0.5?'var(--warn)':'var(--neg)';
+      let label=`${s.done}/${s.total}`;
+      if(s.needsUpdate>0)label+=` \u2022 ${s.needsUpdate} needs update`;
+      attnHtml+=`<div class="needs-attn">
+        <div><span class="needs-attn-name">${s.Name||'Unnamed'}</span> <span class="needs-attn-url">${s.Primary_URL||''}</span></div>
+        <span class="needs-attn-score" style="color:${scoreColor}">${label}</span>
+      </div>`;
+    });
+  }
+  document.getElementById('needsAttention').innerHTML=attnHtml;
+
+  // Domain inventory grouped by role
+  const roles=['Primary','Redirect','URL Shortener','Parked'];
+  let domHtml='';
+  roles.forEach(role=>{
+    const rd=domains.filter(d=>d.Role===role).sort((a,b)=>(a.Domain||'').localeCompare(b.Domain||''));
+    if(!rd.length)return;
+    domHtml+=`<div class="domain-group">
+      <div class="domain-group-hdr">${role} <span class="domain-group-count">${rd.length}</span></div>
+      <div class="domain-list">${rd.map(d=>`<span class="domain-tag">${d.Domain}</span>`).join('')}</div>
+    </div>`;
+  });
+  // Ungrouped
+  const ungrouped=domains.filter(d=>!d.Role||!roles.includes(d.Role));
+  if(ungrouped.length){
+    domHtml+=`<div class="domain-group">
+      <div class="domain-group-hdr">Unassigned <span class="domain-group-count">${ungrouped.length}</span></div>
+      <div class="domain-list">${ungrouped.map(d=>`<span class="domain-tag">${d.Domain}</span>`).join('')}</div>
+    </div>`;
+  }
+  document.getElementById('domainInventory').innerHTML=domHtml;
+
+  document.getElementById('ftr').textContent=`${totalDone}/${totalAll} configs done \u2022 ${domains.length} domains tracked`;
+}
+</script>
+</body>
+</html>
