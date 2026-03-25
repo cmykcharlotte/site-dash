@@ -41,12 +41,19 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .main-hdr .sub{font-size:12px;color:var(--dim);margin-top:2px}
 .theme-btn{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;color:var(--dim);font-family:'DM Sans',sans-serif;transition:all .15s;display:flex;align-items:center;gap:4px}
 .theme-btn:hover{border-color:var(--pri);color:var(--text)}
-.config-list{flex:1;overflow-y:auto;padding:16px 20px}
+.main-scroll{flex:1;overflow-y:auto;padding:16px 20px}
+.section-hdr{display:flex;align-items:center;gap:8px;margin:20px 0 10px;font-size:13px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.section-hdr:first-child{margin-top:0}
+.section-hdr svg{opacity:.7;flex-shrink:0}
 .config-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;transition:all .15s}
-.config-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.config-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
 .config-name{font-size:14px;font-weight:600}
 .config-level{font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);background:rgba(139,149,165,.08)}
-.config-desc{font-size:12px;color:var(--dim);margin-bottom:10px}
+.config-desc{font-size:12px;color:var(--dim);margin-bottom:6px}
+.config-doc{font-size:11px;margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.doc-summary{color:var(--muted);font-style:italic}
+.doc-link{color:var(--pri);text-decoration:none;font-weight:600;font-size:11px;display:inline-flex;align-items:center;gap:3px}
+.doc-link:hover{text-decoration:underline}
 .config-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .status-group{display:flex;gap:4px}
 .status-btn{background:transparent;border:1px solid var(--border);border-radius:5px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;color:var(--dim);transition:all .15s}
@@ -68,6 +75,23 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .toast.show{opacity:1;transform:translateY(0)}
 .t-ok{background:#0c2030;color:#5a9fc4;border:1px solid #2a4a5a}
 .summary-bar{padding:10px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--dim);display:flex;justify-content:space-between}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px}
+.setting-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.setting-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:5px;font-weight:600}
+.setting-input{background:var(--input-bg);border:1px solid var(--input-border);border-radius:5px;padding:4px 8px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;width:100%;transition:border-color .2s}
+.setting-input:focus{outline:none;border-color:var(--pri)}
+.switch{position:relative;display:inline-block;width:36px;height:20px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);transition:.2s;border-radius:20px}
+.slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:var(--dim);transition:.2s;border-radius:50%}
+input:checked+.slider{background:var(--done)}
+input:checked+.slider:before{transform:translateX(16px);background:#fff}
+.log-list{display:flex;flex-direction:column;gap:4px}
+.log-entry{font-size:11px;padding:6px 10px;background:rgba(90,130,181,.04);border-radius:5px;display:flex;gap:8px;align-items:baseline}
+.log-time{color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap}
+.log-action{color:var(--text)}
+.log-detail{color:var(--dim);font-family:'DM Mono',monospace}
+.log-empty{font-size:12px;color:var(--muted);font-style:italic;padding:8px 0}
 </style>
 </head>
 <body>
@@ -75,194 +99,134 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 <div id="dash">
 <div class="layout">
 <div class="sidebar">
-<div class="sidebar-hdr">
-<h1>Config Manager</h1>
+<div class="sidebar-hdr"><h1>Config Manager</h1>
 <div class="filter-row">
 <button class="filter-btn active" onclick="setFilter('all')">All</button>
 <button class="filter-btn" onclick="setFilter('Live')">Live</button>
 <button class="filter-btn" onclick="setFilter('Dev')">Dev</button>
 <button class="filter-btn" onclick="setFilter('Internal')">Internal</button>
-</div>
-</div>
+</div></div>
 <div class="site-list" id="siteList"></div>
 <div class="summary-bar" id="summaryBar"></div>
 </div>
 <div class="main">
-<div class="main-hdr" id="mainHdr">
-<div><h2 id="mainTitle">Select a site</h2><div class="sub" id="mainSub"></div></div>
-<button class="theme-btn" onclick="cycleTheme()" id="themeBtn"></button>
-</div>
-<div class="config-list" id="configList">
-<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span>Select a site to view its config checklist</span></div>
-</div>
-</div>
-</div>
-</div>
+<div class="main-hdr"><div><h2 id="mainTitle">Select a site</h2><div class="sub" id="mainSub"></div></div>
+<button class="theme-btn" onclick="cycleTheme()" id="themeBtn"></button></div>
+<div class="main-scroll" id="mainScroll">
+<div class="empty-state" id="emptyState"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span>Select a site to view its config checklist</span></div>
+<div id="mainContent" style="display:none">
+<div class="section-hdr"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Site Settings</div>
+<div class="settings-grid" id="siteSettings"></div>
+<div class="section-hdr"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Config Checklist</div>
+<div id="configList"></div>
+<div class="section-hdr"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 8 12 12 14 14"/><circle cx="12" cy="12" r="10"/></svg> Activity Log</div>
+<div id="logList"></div>
+</div></div></div></div></div>
 <div class="toast" id="toast"></div>
 <script>
 let DATA=null,selectedSiteId=null,currentFilter='all',saveTimers={};
-
 function getThemePref(){return localStorage.getItem('site-dash-theme')||'auto'}
 function resolveTheme(p){if(p==='light'||p==='dark')return p;return matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'}
-function applyTheme(){const p=getThemePref(),r=resolveTheme(p);document.documentElement.setAttribute('data-theme',r);const L={auto:'Auto',light:'Light',dark:'Dark'},I={auto:'\u2728',light:'\u2600\uFE0F',dark:'\uD83C\uDF19'};document.getElementById('themeBtn').textContent=I[p]+' '+L[p]}
+function applyTheme(){const p=getThemePref(),r=resolveTheme(p);document.documentElement.setAttribute('data-theme',r);const L={auto:'Auto',light:'Light',dark:'Dark'},I={auto:'\u2728',light:'\u2600\ufe0f',dark:'\ud83c\udf19'};document.getElementById('themeBtn').textContent=I[p]+' '+L[p]}
 function cycleTheme(){const o=['auto','light','dark'],c=getThemePref();localStorage.setItem('site-dash-theme',o[(o.indexOf(c)+1)%3]);applyTheme()}
 applyTheme();
-
 function toRows(t){const ks=Object.keys(t).filter(k=>k!=='id'&&k!=='manualSort');const r=[];for(let i=0;i<(t.id?.length||0);i++){const o={_id:t.id[i]};ks.forEach(k=>o[k]=t[k][i]);r.push(o)}return r}
-
+function ep2d(ts){if(!ts)return'';return new Date(ts*1000).toISOString().slice(0,10)}
+function fmtTs(ts){if(!ts)return'';const d=new Date(ts*1000);const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return M[d.getMonth()]+' '+d.getDate()+', '+d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')}
 grist.ready({requiredAccess:'full'});
-
 async function load(){
   try{
-    const[sites,servers,configs,statuses]=await Promise.all([
-      grist.docApi.fetchTable('Sites'),
-      grist.docApi.fetchTable('Servers'),
-      grist.docApi.fetchTable('Config_Items'),
-      grist.docApi.fetchTable('Config_Status')
-    ]);
-    DATA={sites:toRows(sites),servers:toRows(servers),configs:toRows(configs),statuses:toRows(statuses)};
+    const[sites,servers,configs,statuses,logs]=await Promise.all([
+      grist.docApi.fetchTable('Sites'),grist.docApi.fetchTable('Servers'),
+      grist.docApi.fetchTable('Config_Items'),grist.docApi.fetchTable('Config_Status'),
+      grist.docApi.fetchTable('Config_Log')]);
+    DATA={sites:toRows(sites),servers:toRows(servers),configs:toRows(configs),statuses:toRows(statuses),logs:toRows(logs)};
     DATA.serverMap={};DATA.servers.forEach(s=>DATA.serverMap[s._id]=s);
+    DATA.configMap={};DATA.configs.forEach(c=>DATA.configMap[c._id]=c);
     document.getElementById('loading').style.display='none';
     document.getElementById('dash').style.display='block';
-    renderSidebar();
-    if(selectedSiteId)renderConfigs(selectedSiteId);
+    renderSidebar();if(selectedSiteId)renderMain(selectedSiteId);
   }catch(e){document.querySelector('#loading p').textContent='Error: '+e.message}
 }
-load();
-grist.onRecords(()=>load());
-
-function setFilter(f){
-  currentFilter=f;
-  document.querySelectorAll('.filter-btn').forEach(b=>{b.classList.toggle('active',b.textContent===f||(f==='all'&&b.textContent==='All'))});
-  renderSidebar();
-}
-
+load();grist.onRecords(()=>load());
+function setFilter(f){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>{b.classList.toggle('active',b.textContent===f||(f==='all'&&b.textContent==='All'))});renderSidebar()}
 function renderSidebar(){
   const el=document.getElementById('siteList');
   let sites=DATA.sites.slice().sort((a,b)=>(a.Name||'').localeCompare(b.Name||''));
   if(currentFilter!=='all')sites=sites.filter(s=>s.Site_Type===currentFilter);
-
-  const statusMap={};
-  DATA.statuses.forEach(st=>{
-    if(!statusMap[st.Site])statusMap[st.Site]={done:0,total:0};
-    statusMap[st.Site].total++;
-    if(st.Status==='Done')statusMap[st.Site].done++;
-  });
-
-  let html='';
-  sites.forEach(s=>{
-    const server=DATA.serverMap[s.Server];
-    const sm=statusMap[s._id]||{done:0,total:0};
-    const pct=sm.total>0?Math.round(sm.done/sm.total*100):0;
-    const scoreColor=pct===100?'var(--done)':pct>=50?'var(--warn)':'var(--neg)';
-    const badgeClass=s.Site_Type==='Live'?'badge-live':s.Site_Type==='Dev'?'badge-dev':'badge-internal';
-    html+=`<div class="site-item${s._id===selectedSiteId?' selected':''}" onclick="selectSite(${s._id})">
-      <div class="site-name">${s.Name||'Unnamed'}</div>
-      <div class="site-url">${s.Primary_URL||''}</div>
-      <div class="site-meta">
-        ${s.Site_Type?`<span class="site-badge ${badgeClass}">${s.Site_Type}</span>`:''}
-        ${server?`<span style="font-size:10px;color:var(--muted)">${server.Name}</span>`:''}
-        <span class="config-score" style="color:${scoreColor};margin-left:auto">${sm.done}/${sm.total}</span>
-      </div>
-    </div>`;
-  });
-  el.innerHTML=html;
-
-  const totalDone=Object.values(statusMap).reduce((s,v)=>s+v.done,0);
-  const totalAll=Object.values(statusMap).reduce((s,v)=>s+v.total,0);
-  document.getElementById('summaryBar').textContent=`${sites.length} sites \u2022 ${totalDone}/${totalAll} configs done`;
+  const sm={};DATA.statuses.forEach(st=>{if(!sm[st.Site])sm[st.Site]={done:0,total:0};sm[st.Site].total++;if(st.Status==='Done')sm[st.Site].done++});
+  let h='';sites.forEach(s=>{const srv=DATA.serverMap[s.Server];const ss=sm[s._id]||{done:0,total:0};const pct=ss.total>0?Math.round(ss.done/ss.total*100):0;const sc=pct===100?'var(--done)':pct>=50?'var(--warn)':'var(--neg)';const bc=s.Site_Type==='Live'?'badge-live':s.Site_Type==='Dev'?'badge-dev':'badge-internal';
+  h+=`<div class="site-item${s._id===selectedSiteId?' selected':''}" onclick="selectSite(${s._id})"><div class="site-name">${s.Name||'Unnamed'}</div><div class="site-url">${s.Primary_URL||''}</div><div class="site-meta">${s.Site_Type?`<span class="site-badge ${bc}">${s.Site_Type}</span>`:''} ${srv?`<span style="font-size:10px;color:var(--muted)">${srv.Name}</span>`:''}<span class="config-score" style="color:${sc};margin-left:auto">${ss.done}/${ss.total}</span></div></div>`});
+  el.innerHTML=h;
+  const td=Object.values(sm).reduce((s,v)=>s+v.done,0),ta=Object.values(sm).reduce((s,v)=>s+v.total,0);
+  document.getElementById('summaryBar').textContent=sites.length+' sites \u2022 '+td+'/'+ta+' configs done';
 }
-
-function selectSite(id){
-  selectedSiteId=id;
-  renderSidebar();
-  renderConfigs(id);
-}
-
-function ep2d(ts){if(!ts)return'';return new Date(ts*1000).toISOString().slice(0,10)}
-
-function renderConfigs(siteId){
-  const site=DATA.sites.find(s=>s._id===siteId);
-  if(!site)return;
-  const server=DATA.serverMap[site.Server];
-
+function selectSite(id){selectedSiteId=id;renderSidebar();renderMain(id)}
+function renderMain(siteId){
+  const site=DATA.sites.find(s=>s._id===siteId);if(!site)return;
+  const srv=DATA.serverMap[site.Server];
   document.getElementById('mainTitle').textContent=site.Name||'Unnamed';
-  document.getElementById('mainSub').textContent=[site.Primary_URL,server?'on '+server.Name:'',site.Site_Type].filter(Boolean).join(' \u2022 ');
-
-  const siteStatuses=DATA.statuses.filter(st=>st.Site===siteId);
-  const el=document.getElementById('configList');
-
-  if(!siteStatuses.length){
-    el.innerHTML='<div class="empty-state"><span>No config items for this site</span></div>';
-    return;
-  }
-
-  let html='';
-  siteStatuses.forEach(st=>{
-    const ci=DATA.configs.find(c=>c._id===st.Config_Item);
-    if(!ci)return;
-
-    const dateVal=st.Last_Applied?ep2d(st.Last_Applied):'';
-    let stalenessHtml='';
-    if(st.Last_Applied){
-      const days=Math.round((Date.now()/1000-st.Last_Applied)/86400);
-      const cls=days>90?'very-stale':days>30?'stale':'';
-      stalenessHtml=`<span class="staleness ${cls}">${days}d ago</span>`;
-    }
-
-    html+=`<div class="config-card">
-      <div class="config-top">
-        <div class="config-name">${ci.Name}</div>
-        <span class="config-level">${ci.Level||''}</span>
-      </div>
-      ${ci.Description?`<div class="config-desc">${ci.Description}</div>`:''}
-      <div class="config-controls">
-        <div class="status-group">
-          <button class="status-btn${st.Status==='Done'?' s-done':''}" onclick="setStatus(${st._id},'Done')">Done</button>
-          <button class="status-btn${st.Status==='Not Done'?' s-notdone':''}" onclick="setStatus(${st._id},'Not Done')">Not Done</button>
-          <button class="status-btn${st.Status==='Needs Update'?' s-needsupdate':''}" onclick="setStatus(${st._id},'Needs Update')">Needs Update</button>
-        </div>
-        <input type="date" class="date-input" value="${dateVal}" onchange="setDate(${st._id},this.value)" title="Last applied">
-        ${stalenessHtml}
-      </div>
-      <input type="text" class="notes-input" value="${st.Notes||''}" placeholder="Notes…" oninput="debouncedSetNotes(${st._id},this.value)">
-    </div>`;
-  });
-  el.innerHTML=html;
+  document.getElementById('mainSub').textContent=[site.Primary_URL,srv?'on '+srv.Name:'',site.Site_Type].filter(Boolean).join(' \u2022 ');
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('mainContent').style.display='block';
+  renderSettings(site);renderConfigs(siteId);renderLog(siteId);
 }
-
+function renderSettings(site){
+  document.getElementById('siteSettings').innerHTML=`
+    <div class="setting-card"><div class="setting-label">PHP Memory</div><input class="setting-input" value="${site.PHP_Memory||''}" placeholder="e.g. 512M" onchange="saveSiteSetting(${site._id},'PHP_Memory',this.value,'PHP Memory')"></div>
+    <div class="setting-card"><div class="setting-label">Basic Auth</div><label class="switch"><input type="checkbox" ${site.Basic_Auth?'checked':''} onchange="saveSiteToggle(${site._id},'Basic_Auth',this.checked,'Basic Auth')"><span class="slider"></span></label></div>
+    <div class="setting-card"><div class="setting-label">Search Engines Discouraged</div><label class="switch"><input type="checkbox" ${site.Search_Engines_Discouraged?'checked':''} onchange="saveSiteToggle(${site._id},'Search_Engines_Discouraged',this.checked,'Search Engines Discouraged')"><span class="slider"></span></label></div>`;
+}
+function renderConfigs(siteId){
+  const ss=DATA.statuses.filter(st=>st.Site===siteId);const el=document.getElementById('configList');
+  if(!ss.length){el.innerHTML='<div class="log-empty">No config items</div>';return}
+  let h='';ss.forEach(st=>{const ci=DATA.configMap[st.Config_Item];if(!ci)return;
+    const dv=st.Last_Applied?ep2d(st.Last_Applied):'';
+    let sh='';if(st.Last_Applied){const days=Math.round((Date.now()/1000-st.Last_Applied)/86400);sh=`<span class="staleness ${days>90?'very-stale':days>30?'stale':''}">${days}d ago</span>`}
+    let dh='';if(ci.Doc_Summary||ci.Doc_URL){dh='<div class="config-doc">';if(ci.Doc_Summary)dh+='<span class="doc-summary">'+ci.Doc_Summary+'</span>';if(ci.Doc_URL)dh+='<a class="doc-link" href="'+ci.Doc_URL+'" target="_blank"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Docs</a>';dh+='</div>'}
+    const esc=s=>(s||'').replace(/'/g,"\\'");
+    h+=`<div class="config-card"><div class="config-top"><div class="config-name">${ci.Name}</div><span class="config-level">${ci.Level||''}</span></div>${ci.Description?'<div class="config-desc">'+ci.Description+'</div>':''}${dh}<div class="config-controls"><div class="status-group"><button class="status-btn${st.Status==='Done'?' s-done':''}" onclick="setStatus(${st._id},${siteId},${st.Config_Item},'Done','${esc(st.Status)}')">Done</button><button class="status-btn${st.Status==='Not Done'?' s-notdone':''}" onclick="setStatus(${st._id},${siteId},${st.Config_Item},'Not Done','${esc(st.Status)}')">Not Done</button><button class="status-btn${st.Status==='Needs Update'?' s-needsupdate':''}" onclick="setStatus(${st._id},${siteId},${st.Config_Item},'Needs Update','${esc(st.Status)}')">Needs Update</button></div><input type="date" class="date-input" value="${dv}" onchange="setDate(${st._id},${siteId},${st.Config_Item},this.value,'${dv}')" title="Last applied"> ${sh}</div><input type="text" class="notes-input" value="${(st.Notes||'').replace(/"/g,'&quot;')}" placeholder="Notes\u2026" oninput="debouncedSetNotes(${st._id},${siteId},${st.Config_Item},this.value)"></div>`});
+  el.innerHTML=h;
+}
+function renderLog(siteId){
+  const el=document.getElementById('logList');
+  const sl=DATA.logs.filter(l=>l.Site===siteId).sort((a,b)=>(b.Timestamp||0)-(a.Timestamp||0)).slice(0,20);
+  if(!sl.length){el.innerHTML='<div class="log-empty">No activity logged yet</div>';return}
+  let h='<div class="log-list">';sl.forEach(l=>{
+    const ci=l.Config_Item?DATA.configMap[l.Config_Item]:null;const cn=ci?ci.Name:'Site setting';
+    let dt='';if(l.Old_Value&&l.New_Value)dt=l.Old_Value+' \u2192 '+l.New_Value;else if(l.New_Value)dt=l.New_Value;
+    h+=`<div class="log-entry"><span class="log-time">${fmtTs(l.Timestamp)}</span><span class="log-action"><strong>${cn}</strong> \u2014 ${l.Action||''}</span>${dt?'<span class="log-detail">'+dt+'</span>':''}</div>`});
+  h+='</div>';el.innerHTML=h;
+}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.className='toast show t-ok';setTimeout(()=>{t.className='toast'},2000)}
-
-async function setStatus(rowId,status){
-  try{
-    const table=grist.getTable('Config_Status');
-    const fields={Status:status};
-    if(status==='Done')fields.Last_Applied=Math.floor(Date.now()/1000);
-    await table.update({id:rowId,fields});
-    showToast('Status updated');
-  }catch(e){console.error(e)}
+async function writeLog(siteId,ciId,action,field,oldV,newV,notes){
+  try{await grist.getTable('Config_Log').create({fields:{Site:siteId,Config_Item:ciId||0,Timestamp:Math.floor(Date.now()/1000),Action:action,Field_Changed:field||'',Old_Value:String(oldV||''),New_Value:String(newV||''),Notes:notes||''}})}catch(e){console.error('Log:',e)}
 }
-
-async function setDate(rowId,dateStr){
-  try{
-    const table=grist.getTable('Config_Status');
-    const epoch=dateStr?Math.floor(new Date(dateStr+'T12:00:00').getTime()/1000):null;
-    await table.update({id:rowId,fields:{Last_Applied:epoch}});
-    showToast('Date updated');
-  }catch(e){console.error(e)}
+async function setStatus(rowId,siteId,ciId,status,old){
+  if(status===old)return;
+  try{const f={Status:status};if(status==='Done')f.Last_Applied=Math.floor(Date.now()/1000);
+  await grist.getTable('Config_Status').update({id:rowId,fields:f});
+  await writeLog(siteId,ciId,'Status changed','Status',old,status);showToast('Status updated')}catch(e){console.error(e)}
 }
-
-function debouncedSetNotes(rowId,val){
-  if(saveTimers[rowId])clearTimeout(saveTimers[rowId]);
-  saveTimers[rowId]=setTimeout(()=>setNotes(rowId,val),800);
+async function setDate(rowId,siteId,ciId,ds,old){
+  try{const ep=ds?Math.floor(new Date(ds+'T12:00:00').getTime()/1000):null;
+  await grist.getTable('Config_Status').update({id:rowId,fields:{Last_Applied:ep}});
+  await writeLog(siteId,ciId,'Date changed','Last Applied',old,ds);showToast('Date updated')}catch(e){console.error(e)}
 }
-
-async function setNotes(rowId,val){
-  try{
-    const table=grist.getTable('Config_Status');
-    await table.update({id:rowId,fields:{Notes:val}});
-    showToast('Notes saved');
-  }catch(e){console.error(e)}
+function debouncedSetNotes(rowId,siteId,ciId,val){const k='n-'+rowId;if(saveTimers[k])clearTimeout(saveTimers[k]);saveTimers[k]=setTimeout(()=>setNotes(rowId,siteId,ciId,val),800)}
+async function setNotes(rowId,siteId,ciId,val){
+  try{await grist.getTable('Config_Status').update({id:rowId,fields:{Notes:val}});
+  await writeLog(siteId,ciId,'Notes updated','Notes','',val);showToast('Notes saved')}catch(e){console.error(e)}
+}
+async function saveSiteSetting(siteId,field,val,label){
+  const site=DATA.sites.find(s=>s._id===siteId);const old=site?site[field]||'':'';
+  try{await grist.getTable('Sites').update({id:siteId,fields:{[field]:val}});
+  await writeLog(siteId,0,label+' changed',label,old,val);showToast(label+' updated')}catch(e){console.error(e)}
+}
+async function saveSiteToggle(siteId,field,checked,label){
+  const site=DATA.sites.find(s=>s._id===siteId);const old=site?site[field]:'';
+  try{await grist.getTable('Sites').update({id:siteId,fields:{[field]:checked}});
+  await writeLog(siteId,0,label+(checked?' enabled':' disabled'),label,old?'On':'Off',checked?'On':'Off');showToast(label+' updated')}catch(e){console.error(e)}
 }
 </script>
 </body>
