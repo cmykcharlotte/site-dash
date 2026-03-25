@@ -6,8 +6,8 @@
 <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-:root{--bg:#111826;--card:#172030;--border:#1e2a3a;--pri:#5a82b5;--sec:#c4785a;--pos:#5a9fc4;--neg:#c45a5a;--done:#4a9a6a;--warn:#c4a85a;--text:#d0d7de;--dim:#8b95a5;--muted:#6b7585}
-[data-theme="light"]{--bg:#f5f7fa;--card:#ffffff;--border:#dce1e8;--text:#1a2332;--dim:#5a6878;--muted:#8494a7;--done:#3a8a5a;--warn:#a48a3a}
+:root{--bg:#111826;--card:#172030;--border:#1e2a3a;--pri:#5a82b5;--sec:#c4785a;--pos:#5a9fc4;--neg:#c45a5a;--done:#4a9a6a;--warn:#c4a85a;--text:#d0d7de;--dim:#8b95a5;--muted:#6b7585;--input-bg:#1e2a3a;--input-border:#2a3a4a}
+[data-theme="light"]{--bg:#f5f7fa;--card:#ffffff;--border:#dce1e8;--text:#1a2332;--dim:#5a6878;--muted:#8494a7;--done:#3a8a5a;--warn:#a48a3a;--input-bg:#f0f2f5;--input-border:#c5cdd8}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:24px 28px 48px;transition:background .3s,color .3s}
 #loading{display:flex;align-items:center;justify-content:center;height:60vh;flex-direction:column;gap:12px}
@@ -21,7 +21,7 @@ h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
 .theme-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--dim);font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px}
 .theme-btn:hover{border-color:var(--pri);color:var(--text)}
 .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.sc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;flex:1 1 0;min-width:120px;transition:background .3s,border-color .3s}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;flex:1 1 0;min-width:120px}
 .sc-l{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--dim);margin-bottom:6px}
 .sc-v{font-size:26px;font-weight:700;line-height:1.1}
 .sc-s{font-size:11px;color:var(--muted);margin-top:4px}
@@ -31,7 +31,7 @@ h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
 .cc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;transition:background .3s,border-color .3s}
 .mono{font-family:'DM Mono',monospace}
 .footer{margin-top:28px;padding-top:14px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
-.server-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;transition:background .3s,border-color .3s}
+.server-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px}
 .server-name{font-size:16px;font-weight:700;margin-bottom:2px}
 .server-meta{font-size:11px;color:var(--dim);margin-bottom:10px}
 .server-sites{display:flex;flex-direction:column;gap:6px}
@@ -63,6 +63,18 @@ h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
 .needs-attn-name{font-size:13px;font-weight:600}
 .needs-attn-url{font-size:11px;color:var(--dim);font-family:'DM Mono',monospace}
 .needs-attn-score{font-size:12px;font-weight:700;font-family:'DM Mono',monospace}
+.activity-feed{display:flex;flex-direction:column;gap:4px}
+.activity-entry{font-size:11px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:6px;display:flex;gap:10px;align-items:baseline}
+.activity-time{color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap;min-width:75px}
+.activity-site{color:var(--pri);font-weight:600;white-space:nowrap}
+.activity-action{color:var(--text)}
+.activity-detail{color:var(--dim);font-family:'DM Mono',monospace;margin-left:auto;white-space:nowrap}
+.activity-empty{font-size:12px;color:var(--muted);font-style:italic;padding:8px 0}
+.expiry-warn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.expiry-domain{font-size:13px;font-weight:600;font-family:'DM Mono',monospace}
+.expiry-date{font-size:11px;font-family:'DM Mono',monospace}
+.expiry-soon{color:var(--neg)}
+.expiry-upcoming{color:var(--warn)}
 </style>
 </head>
 <body>
@@ -71,6 +83,9 @@ h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
 <div class="hdr"><div><h1>Master Site Tracker</h1><div class="sub" id="sub"></div></div>
 <button class="theme-btn" id="themeBtn" onclick="cycleTheme()"></button></div>
 <div class="stats" id="topStats"></div>
+
+<div class="stitle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="12 8 12 12 14 14"/><circle cx="12" cy="12" r="10"/></svg> Recent Activity</div>
+<div id="activityFeed"></div>
 
 <div class="two">
 <div class="half">
@@ -83,6 +98,8 @@ h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
 
 <div class="stitle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Needs Attention</div>
 <div id="needsAttention"></div>
+
+<div id="expirySection"></div>
 </div>
 </div>
 
@@ -99,18 +116,18 @@ function applyTheme(){const p=getThemePref(),r=resolveTheme(p);document.document
 function cycleTheme(){const o=['auto','light','dark'],c=getThemePref();localStorage.setItem('site-dash-theme',o[(o.indexOf(c)+1)%3]);applyTheme()}
 applyTheme();
 function toRows(t){const ks=Object.keys(t).filter(k=>k!=='id'&&k!=='manualSort');const r=[];for(let i=0;i<(t.id?.length||0);i++){const o={_id:t.id[i]};ks.forEach(k=>o[k]=t[k][i]);r.push(o)}return r}
+function ep2d(ts){if(!ts)return'';return new Date(ts*1000).toISOString().slice(0,10)}
+function fmtTs(ts){if(!ts)return'';const d=new Date(ts*1000);const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return M[d.getMonth()]+' '+d.getDate()+', '+d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')}
+function fmtDate(ts){if(!ts)return'';const d=new Date(ts*1000);const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return M[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()}
 
 grist.ready({requiredAccess:'full'});
 async function load(){
   try{
-    const[sites,servers,domains,configs,statuses]=await Promise.all([
-      grist.docApi.fetchTable('Sites'),
-      grist.docApi.fetchTable('Servers'),
-      grist.docApi.fetchTable('Domains'),
-      grist.docApi.fetchTable('Config_Items'),
-      grist.docApi.fetchTable('Config_Status')
-    ]);
-    DATA={sites:toRows(sites),servers:toRows(servers),domains:toRows(domains),configs:toRows(configs),statuses:toRows(statuses)};
+    const[sites,servers,domains,configs,statuses,logs]=await Promise.all([
+      grist.docApi.fetchTable('Sites'),grist.docApi.fetchTable('Servers'),
+      grist.docApi.fetchTable('Domains'),grist.docApi.fetchTable('Config_Items'),
+      grist.docApi.fetchTable('Config_Status'),grist.docApi.fetchTable('Config_Log')]);
+    DATA={sites:toRows(sites),servers:toRows(servers),domains:toRows(domains),configs:toRows(configs),statuses:toRows(statuses),logs:toRows(logs)};
     document.getElementById('loading').style.display='none';
     document.getElementById('dash').style.display='block';
     render(DATA);
@@ -118,13 +135,14 @@ async function load(){
 }
 load();grist.onRecords(()=>load());
 
-function sc(l,v,s,c){return`<div class="sc"><div class="sc-l">${l}</div><div class="sc-v" style="color:${c||'var(--text)'}">${v}</div>${s?`<div class="sc-s">${s}</div>`:''}</div>`}
+function sc(l,v,s,c){return'<div class="sc"><div class="sc-l">'+l+'</div><div class="sc-v" style="color:'+(c||'var(--text)')+'">'+v+'</div>'+(s?'<div class="sc-s">'+s+'</div>':'')+'</div>'}
 
 function render(D){
-  const{sites,servers,domains,configs,statuses}=D;
+  const{sites,servers,domains,configs,statuses,logs}=D;
   const serverMap={};servers.forEach(s=>serverMap[s._id]=s);
+  const siteMap={};sites.forEach(s=>siteMap[s._id]=s);
+  const configMap={};configs.forEach(c=>configMap[c._id]=c);
 
-  // Status map
   const siteStatus={};
   statuses.forEach(st=>{
     if(!siteStatus[st.Site])siteStatus[st.Site]={done:0,total:0,needsUpdate:0};
@@ -132,116 +150,96 @@ function render(D){
     if(st.Status==='Done')siteStatus[st.Site].done++;
     if(st.Status==='Needs Update')siteStatus[st.Site].needsUpdate++;
   });
-
   const totalDone=Object.values(siteStatus).reduce((s,v)=>s+v.done,0);
   const totalAll=Object.values(siteStatus).reduce((s,v)=>s+v.total,0);
   const totalNeedsUpdate=Object.values(siteStatus).reduce((s,v)=>s+v.needsUpdate,0);
   const pctDone=totalAll>0?Math.round(totalDone/totalAll*100):0;
-
   const liveSites=sites.filter(s=>s.Site_Type==='Live').length;
   const devSites=sites.filter(s=>s.Site_Type==='Dev').length;
   const intSites=sites.filter(s=>s.Site_Type==='Internal').length;
   const primaryDomains=domains.filter(d=>d.Role==='Primary').length;
   const parkedDomains=domains.filter(d=>d.Role==='Parked').length;
 
-  document.getElementById('sub').textContent=`${sites.length} sites \u2022 ${servers.length} servers \u2022 ${domains.length} domains`;
-
+  document.getElementById('sub').textContent=sites.length+' sites \u2022 '+servers.length+' servers \u2022 '+domains.length+' domains';
   document.getElementById('topStats').innerHTML=[
-    sc('Sites',sites.length,`${liveSites} live \u2022 ${devSites} dev \u2022 ${intSites} internal`,'var(--pri)'),
-    sc('Domains',domains.length,`${primaryDomains} primary \u2022 ${parkedDomains} parked`,'var(--sec)'),
-    sc('Config Done',pctDone+'%',`${totalDone}/${totalAll} items`,'var(--done)'),
+    sc('Sites',sites.length,liveSites+' live \u2022 '+devSites+' dev \u2022 '+intSites+' internal','var(--pri)'),
+    sc('Domains',domains.length,primaryDomains+' primary \u2022 '+parkedDomains+' parked','var(--sec)'),
+    sc('Config Done',pctDone+'%',totalDone+'/'+totalAll+' items','var(--done)'),
     sc('Needs Update',totalNeedsUpdate,totalNeedsUpdate>0?'items across all sites':'all clear',totalNeedsUpdate>0?'var(--warn)':'var(--done)')
   ].join('');
 
-  // Sites per server
-  let serverHtml='';
-  servers.forEach(srv=>{
-    const srvSites=sites.filter(s=>s.Server===srv._id).sort((a,b)=>(a.Name||'').localeCompare(b.Name||''));
-    serverHtml+=`<div class="server-card">
-      <div class="server-name">${srv.Name}</div>
-      <div class="server-meta">${srv.Provider} \u2022 ${srv.IP_Address||''} \u2022 ${srv.Region||''} \u2022 ${srvSites.length} site${srvSites.length!==1?'s':''}</div>
-      <div class="server-sites">`;
-    srvSites.forEach(s=>{
-      const ss=siteStatus[s._id]||{done:0,total:0};
-      const pct=ss.total>0?Math.round(ss.done/ss.total*100):0;
-      const scoreColor=pct===100?'var(--done)':pct>=50?'var(--warn)':'var(--neg)';
-      const badgeClass=s.Site_Type==='Live'?'badge-live':s.Site_Type==='Dev'?'badge-dev':'badge-internal';
-      const xcloudClass=s.xCloud_Status==='Active'?'badge-active':s.xCloud_Status==='Demo'?'badge-demo':'badge-inactive';
-      serverHtml+=`<div class="ssite">
-        <div><span class="ssite-name">${s.Name||'Unnamed'}</span> <span class="ssite-url">${s.Primary_URL||''}</span></div>
-        <div class="ssite-badges">
-          <span class="badge ${badgeClass}">${s.Site_Type||''}</span>
-          <span class="badge ${xcloudClass}">${s.xCloud_Status||''}</span>
-          <span class="config-pct" style="color:${scoreColor}">${ss.done}/${ss.total}</span>
-        </div>
-      </div>`;
+  // Recent activity
+  var recentLogs=logs.slice().sort(function(a,b){return(b.Timestamp||0)-(a.Timestamp||0)}).slice(0,15);
+  var afEl=document.getElementById('activityFeed');
+  if(!recentLogs.length){
+    afEl.innerHTML='<div class="activity-empty">No activity logged yet. Changes made in the Config Manager will appear here.</div>';
+  }else{
+    var afh='<div class="activity-feed">';
+    recentLogs.forEach(function(l){
+      var site=siteMap[l.Site];var ci=l.Config_Item?configMap[l.Config_Item]:null;
+      var siteName=site?site.Name:'Unknown';var ciName=ci?ci.Name:'Site setting';
+      var detail='';if(l.Old_Value&&l.New_Value)detail=l.Old_Value+' \u2192 '+l.New_Value;else if(l.New_Value&&l.Action!=='Notes updated')detail=l.New_Value;
+      afh+='<div class="activity-entry"><span class="activity-time">'+fmtTs(l.Timestamp)+'</span><span class="activity-site">'+siteName+'</span><span class="activity-action">'+ciName+' \u2014 '+(l.Action||'')+'</span>'+(detail?'<span class="activity-detail">'+detail+'</span>':'')+'</div>';
     });
-    serverHtml+=`</div></div>`;
+    afh+='</div>';afEl.innerHTML=afh;
+  }
+
+  // Sites per server
+  var serverHtml='';
+  servers.forEach(function(srv){
+    var srvSites=sites.filter(function(s){return s.Server===srv._id}).sort(function(a,b){return(a.Name||'').localeCompare(b.Name||'')});
+    serverHtml+='<div class="server-card"><div class="server-name">'+srv.Name+'</div><div class="server-meta">'+srv.Provider+' \u2022 '+(srv.IP_Address||'')+' \u2022 '+(srv.Region||'')+' \u2022 '+srvSites.length+' site'+(srvSites.length!==1?'s':'')+'</div><div class="server-sites">';
+    srvSites.forEach(function(s){
+      var ss=siteStatus[s._id]||{done:0,total:0};var pct=ss.total>0?Math.round(ss.done/ss.total*100):0;
+      var scoreColor=pct===100?'var(--done)':pct>=50?'var(--warn)':'var(--neg)';
+      var badgeClass=s.Site_Type==='Live'?'badge-live':s.Site_Type==='Dev'?'badge-dev':'badge-internal';
+      var xcloudClass=s.xCloud_Status==='Active'?'badge-active':s.xCloud_Status==='Demo'?'badge-demo':'badge-inactive';
+      serverHtml+='<div class="ssite"><div><span class="ssite-name">'+s.Name+'</span> <span class="ssite-url">'+(s.Primary_URL||'')+'</span></div><div class="ssite-badges"><span class="badge '+badgeClass+'">'+(s.Site_Type||'')+'</span><span class="badge '+xcloudClass+'">'+(s.xCloud_Status||'')+'</span><span class="config-pct" style="color:'+scoreColor+'">'+ss.done+'/'+ss.total+'</span></div></div>';
+    });
+    serverHtml+='</div></div>';
   });
   document.getElementById('serverCards').innerHTML=serverHtml;
 
   // Config completion by item
-  let cbHtml='';
-  configs.forEach(ci=>{
-    const itemStatuses=statuses.filter(st=>st.Config_Item===ci._id);
-    const done=itemStatuses.filter(st=>st.Status==='Done').length;
-    const total=itemStatuses.length;
-    const pct=total>0?Math.round(done/total*100):0;
-    const barColor=pct===100?'var(--done)':pct>=50?'var(--warn)':'var(--neg)';
-    cbHtml+=`<div class="config-row">
-      <div><span class="config-item-name">${ci.Name}</span> <span class="badge" style="background:rgba(139,149,165,.08);color:var(--dim)">${ci.Level}</span></div>
-      <div class="config-bar-wrap">
-        <div class="config-bar"><div class="config-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
-        <span class="config-bar-label">${done}/${total}</span>
-      </div>
-    </div>`;
+  var cbHtml='';
+  configs.forEach(function(ci){
+    var itemS=statuses.filter(function(st){return st.Config_Item===ci._id});
+    var done=itemS.filter(function(st){return st.Status==='Done'}).length;var total=itemS.length;
+    var pct=total>0?Math.round(done/total*100):0;var barColor=pct===100?'var(--done)':pct>=50?'var(--warn)':'var(--neg)';
+    cbHtml+='<div class="config-row"><div><span class="config-item-name">'+ci.Name+'</span> <span class="badge" style="background:rgba(139,149,165,.08);color:var(--dim)">'+ci.Level+'</span></div><div class="config-bar-wrap"><div class="config-bar"><div class="config-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div><span class="config-bar-label">'+done+'/'+total+'</span></div></div>';
   });
   document.getElementById('configBars').innerHTML=cbHtml;
 
-  // Needs attention — sites with lowest config completion or needs-update items
-  const attnSites=sites.map(s=>{
-    const ss=siteStatus[s._id]||{done:0,total:0,needsUpdate:0};
-    return{...s,done:ss.done,total:ss.total,needsUpdate:ss.needsUpdate,pct:ss.total>0?ss.done/ss.total:1};
-  }).filter(s=>s.pct<1||s.needsUpdate>0).sort((a,b)=>a.pct-b.pct).slice(0,10);
-
-  let attnHtml='';
-  if(!attnSites.length){
-    attnHtml='<div style="padding:12px;color:var(--done);font-size:13px">All sites fully configured!</div>';
-  }else{
-    attnSites.forEach(s=>{
-      const scoreColor=s.pct>=1?'var(--done)':s.pct>=0.5?'var(--warn)':'var(--neg)';
-      let label=`${s.done}/${s.total}`;
-      if(s.needsUpdate>0)label+=` \u2022 ${s.needsUpdate} needs update`;
-      attnHtml+=`<div class="needs-attn">
-        <div><span class="needs-attn-name">${s.Name||'Unnamed'}</span> <span class="needs-attn-url">${s.Primary_URL||''}</span></div>
-        <span class="needs-attn-score" style="color:${scoreColor}">${label}</span>
-      </div>`;
-    });
-  }
+  // Needs attention
+  var attnSites=sites.map(function(s){var ss=siteStatus[s._id]||{done:0,total:0,needsUpdate:0};return Object.assign({},s,{done:ss.done,total:ss.total,needsUpdate:ss.needsUpdate,pct:ss.total>0?ss.done/ss.total:1})}).filter(function(s){return s.pct<1||s.needsUpdate>0}).sort(function(a,b){return a.pct-b.pct}).slice(0,10);
+  var attnHtml='';
+  if(!attnSites.length){attnHtml='<div style="padding:12px;color:var(--done);font-size:13px">All sites fully configured!</div>'}
+  else{attnSites.forEach(function(s){var scoreColor=s.pct>=1?'var(--done)':s.pct>=0.5?'var(--warn)':'var(--neg)';var label=s.done+'/'+s.total;if(s.needsUpdate>0)label+=' \u2022 '+s.needsUpdate+' needs update';attnHtml+='<div class="needs-attn"><div><span class="needs-attn-name">'+(s.Name||'Unnamed')+'</span> <span class="needs-attn-url">'+(s.Primary_URL||'')+'</span></div><span class="needs-attn-score" style="color:'+scoreColor+'">'+label+'</span></div>'})}
   document.getElementById('needsAttention').innerHTML=attnHtml;
 
-  // Domain inventory grouped by role
-  const roles=['Primary','Redirect','URL Shortener','Parked'];
-  let domHtml='';
-  roles.forEach(role=>{
-    const rd=domains.filter(d=>d.Role===role).sort((a,b)=>(a.Domain||'').localeCompare(b.Domain||''));
-    if(!rd.length)return;
-    domHtml+=`<div class="domain-group">
-      <div class="domain-group-hdr">${role} <span class="domain-group-count">${rd.length}</span></div>
-      <div class="domain-list">${rd.map(d=>`<span class="domain-tag">${d.Domain}</span>`).join('')}</div>
-    </div>`;
-  });
-  // Ungrouped
-  const ungrouped=domains.filter(d=>!d.Role||!roles.includes(d.Role));
-  if(ungrouped.length){
-    domHtml+=`<div class="domain-group">
-      <div class="domain-group-hdr">Unassigned <span class="domain-group-count">${ungrouped.length}</span></div>
-      <div class="domain-list">${ungrouped.map(d=>`<span class="domain-tag">${d.Domain}</span>`).join('')}</div>
-    </div>`;
-  }
-  document.getElementById('domainInventory').innerHTML=domHtml;
+  // Domain expiration warnings (90 days out)
+  var now=Date.now()/1000;var expWarn=domains.filter(function(d){return d.Expiration&&d.Expiration>0&&(d.Expiration-now)<90*86400}).sort(function(a,b){return(a.Expiration||0)-(b.Expiration||0)});
+  var expEl=document.getElementById('expirySection');
+  if(expWarn.length){
+    var eh='<div class="stitle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Expiring Soon</div>';
+    expWarn.forEach(function(d){
+      var daysLeft=Math.round((d.Expiration-now)/86400);var cls=daysLeft<=30?'expiry-soon':'expiry-upcoming';
+      eh+='<div class="expiry-warn"><span class="expiry-domain">'+d.Domain+'</span><span class="expiry-date '+cls+'">'+(daysLeft<=0?'EXPIRED':daysLeft+'d \u2022 '+fmtDate(d.Expiration))+'</span></div>';
+    });
+    expEl.innerHTML=eh;
+  }else{expEl.innerHTML=''}
 
-  document.getElementById('ftr').textContent=`${totalDone}/${totalAll} configs done \u2022 ${domains.length} domains tracked`;
+  // Domain inventory
+  var roles=['Primary','Redirect','URL Shortener','Parked'];var domHtml='';
+  roles.forEach(function(role){
+    var rd=domains.filter(function(d){return d.Role===role}).sort(function(a,b){return(a.Domain||'').localeCompare(b.Domain||'')});
+    if(!rd.length)return;
+    domHtml+='<div class="domain-group"><div class="domain-group-hdr">'+role+' <span class="domain-group-count">'+rd.length+'</span></div><div class="domain-list">'+rd.map(function(d){return'<span class="domain-tag">'+d.Domain+'</span>'}).join('')+'</div></div>';
+  });
+  var ungrouped=domains.filter(function(d){return!d.Role||roles.indexOf(d.Role)===-1});
+  if(ungrouped.length){domHtml+='<div class="domain-group"><div class="domain-group-hdr">Unassigned <span class="domain-group-count">'+ungrouped.length+'</span></div><div class="domain-list">'+ungrouped.map(function(d){return'<span class="domain-tag" style="border-color:var(--warn)">'+d.Domain+'</span>'}).join('')+'</div></div>'}
+  document.getElementById('domainInventory').innerHTML=domHtml;
+  document.getElementById('ftr').textContent=totalDone+'/'+totalAll+' configs done \u2022 '+domains.length+' domains tracked';
 }
 </script>
 </body>
