@@ -186,7 +186,8 @@ function render(D){
 
   // Sites per server
   var serverHtml='';
-  servers.forEach(function(srv){
+  var sortedServers=servers.slice().sort(function(a,b){if(a.Name==='Scooby')return 1;if(b.Name==='Scooby')return -1;return 0});
+  sortedServers.forEach(function(srv){
     var srvSites=sites.filter(function(s){return s.Server===srv._id}).sort(function(a,b){return(a.Name||'').localeCompare(b.Name||'')});
     serverHtml+='<div class="server-card"><div class="server-name">'+srv.Name+'</div><div class="server-meta">'+srv.Provider+' \u2022 '+(srv.IP_Address||'')+' \u2022 '+(srv.Region||'')+' \u2022 '+srvSites.length+' site'+(srvSites.length!==1?'s':'')+'</div><div class="server-sites">';
     srvSites.forEach(function(s){
