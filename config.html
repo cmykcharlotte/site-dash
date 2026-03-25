@@ -75,6 +75,18 @@ body{font-family:'Karla',system-ui,sans-serif;background:var(--bg);color:var(--t
 .notes-input{background:transparent;border:none;border-left:2px solid var(--border);padding:4px 0 4px 10px;color:var(--text);font-family:'Karla',sans-serif;font-size:11px;width:100%;min-height:38px;resize:none;line-height:1.4;transition:border-color .2s}
 .notes-input:focus{outline:none;border-color:var(--pri)}
 .notes-input::placeholder{color:var(--muted)}
+.action-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.action-btn{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:11px;font-weight:600;font-family:'Karla',sans-serif;color:var(--dim);transition:all .15s;display:flex;align-items:center;gap:5px}
+.action-btn:hover{border-color:var(--pri);color:var(--text)}
+.action-btn:disabled{opacity:.5;cursor:not-allowed}
+.action-btn svg{width:14px;height:14px;opacity:.7}
+.action-btn-danger{color:var(--neg)}
+.action-btn-danger:hover{border-color:var(--neg)}
+.sync-notice{background:rgba(196,168,90,.08);border:1px solid rgba(196,168,90,.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--warn)}
+.sync-notice-text{display:flex;align-items:center;gap:6px}
+.init-state{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:40px 20px;color:var(--dim)}
+.init-state svg{opacity:.3}
+.init-state p{font-size:13px}
 .empty-state{display:flex;align-items:center;justify-content:center;height:100%;color:var(--dim);font-size:16px;flex-direction:column;gap:8px}
 .empty-state svg{opacity:.4}
 .toast{position:fixed;bottom:16px;right:16px;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:100}
@@ -185,8 +197,24 @@ function renderSettings(site){
 }
 function renderConfigs(siteId){
   const ss=DATA.statuses.filter(st=>st.Site===siteId);const el=document.getElementById('configList');
-  if(!ss.length){el.innerHTML='<div class="log-empty">No config items</div>';return}
-  let h='';ss.forEach(st=>{const ci=DATA.configMap[st.Config_Item];if(!ci)return;
+  const defaultConfigs=DATA.configs.filter(c=>c.Default_Applies);
+
+  if(!ss.length){
+    el.innerHTML=`<div class="init-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><p>No configs set up for this site</p><button class="action-btn" onclick="initializeConfigs(${siteId})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Initialize ${defaultConfigs.length} default configs</button></div>`;
+    return;
+  }
+
+  let h='';
+
+  const existingCiIds=new Set(ss.map(st=>st.Config_Item));
+  const missing=defaultConfigs.filter(c=>!existingCiIds.has(c._id));
+  if(missing.length){
+    h+=`<div class="sync-notice"><div class="sync-notice-text"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${missing.length} config${missing.length>1?'s':''} missing: ${missing.map(c=>c.Name).join(', ')}</div><button class="action-btn" onclick="syncMissingConfigs(${siteId})">Add missing</button></div>`;
+  }
+
+  h+=`<div class="action-bar"><button class="action-btn action-btn-danger" onclick="resetConfigs(${siteId})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 105.64-11.36L1 10"/></svg> Reset all configs</button></div>`;
+
+  ss.forEach(st=>{const ci=DATA.configMap[st.Config_Item];if(!ci)return;
     const dv=st.Last_Applied?ep2d(st.Last_Applied):'';
     let sh='';if(st.Last_Applied){const days=Math.round((Date.now()/1000-st.Last_Applied)/86400);sh=`<span class="staleness ${days>90?'very-stale':days>30?'stale':''}">${days}d ago</span>`}
     let dh='';if(ci.Doc_Summary||ci.Doc_URL){dh='<div class="config-doc">';if(ci.Doc_Summary)dh+='<span class="doc-summary">'+ci.Doc_Summary+'</span>';if(ci.Doc_URL)dh+='<a class="doc-link" href="'+ci.Doc_URL+'" target="_blank"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Docs</a>';dh+='</div>'}
@@ -235,6 +263,46 @@ async function saveSiteToggle(siteId,field,checked,label){
   const site=DATA.sites.find(s=>s._id===siteId);const old=site?site[field]:'';
   try{await grist.getTable('Sites').update({id:siteId,fields:{[field]:checked}});
   await writeLog(siteId,0,label+(checked?' enabled':' disabled'),label,old?'On':'Off',checked?'On':'Off');showToast(label+' updated')}catch(e){console.error(e)}
+}
+async function initializeConfigs(siteId){
+  const defaultConfigs=DATA.configs.filter(c=>c.Default_Applies);
+  if(!defaultConfigs.length){showToast('No default config items defined');return}
+  try{
+    const table=grist.getTable('Config_Status');
+    for(const ci of defaultConfigs){
+      await table.create({fields:{Site:siteId,Config_Item:ci._id,Status:'Not Done'}});
+    }
+    await writeLog(siteId,0,'Configs initialized','Config_Status','',defaultConfigs.length+' items created');
+    showToast(defaultConfigs.length+' configs initialized');
+  }catch(e){console.error(e);showToast('Error initializing configs')}
+}
+async function syncMissingConfigs(siteId){
+  const ss=DATA.statuses.filter(st=>st.Site===siteId);
+  const existingCiIds=new Set(ss.map(st=>st.Config_Item));
+  const missing=DATA.configs.filter(c=>c.Default_Applies&&!existingCiIds.has(c._id));
+  if(!missing.length){showToast('All configs up to date');return}
+  try{
+    const table=grist.getTable('Config_Status');
+    for(const ci of missing){
+      await table.create({fields:{Site:siteId,Config_Item:ci._id,Status:'Not Done'}});
+    }
+    await writeLog(siteId,0,'Missing configs added','Config_Status','',missing.length+' items added');
+    showToast(missing.length+' missing config(s) added');
+  }catch(e){console.error(e);showToast('Error adding missing configs')}
+}
+async function resetConfigs(siteId){
+  const site=DATA.sites.find(s=>s._id===siteId);
+  if(!confirm('Reset all configs for '+(site?site.Name:'this site')+' to "Not Done"? This cannot be undone.')){return}
+  const ss=DATA.statuses.filter(st=>st.Site===siteId);
+  if(!ss.length){return}
+  try{
+    const table=grist.getTable('Config_Status');
+    for(const st of ss){
+      await table.update({id:st._id,fields:{Status:'Not Done',Last_Applied:null,Notes:''}});
+    }
+    await writeLog(siteId,0,'All configs reset','Config_Status','','All set to Not Done');
+    showToast('All configs reset to Not Done');
+  }catch(e){console.error(e);showToast('Error resetting configs')}
 }
 </script>
 </body>
