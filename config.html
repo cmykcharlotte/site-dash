@@ -6,8 +6,8 @@
 <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Karla:wght@400;500;600;700&family=Inconsolata:wght@400;500&display=swap');
-:root{--bg:#111826;--card:#172030;--border:#1e2a3a;--pri:#5a82b5;--sec:#c4785a;--pos:#5a9fc4;--neg:#c45a5a;--done:#4a9a6a;--warn:#c4a85a;--text:#d0d7de;--dim:#8b95a5;--muted:#6b7585;--input-bg:#1e2a3a;--input-border:#2a3a4a;--date-icon-filter:invert(0.7)}
-[data-theme="light"]{--bg:#f5f7fa;--card:#ffffff;--border:#dce1e8;--text:#1a2332;--dim:#5a6878;--muted:#8494a7;--input-bg:#f0f2f5;--input-border:#c5cdd8;--done:#3a8a5a;--warn:#a48a3a;--date-icon-filter:invert(0.3)}
+:root{--bg:#111826;--card:#172030;--border:#1e2a3a;--pri:#5a82b5;--sec:#c4785a;--pos:#5a9fc4;--neg:#c45a5a;--done:#4a9a6a;--warn:#c4a85a;--text:#d0d7de;--dim:#8b95a5;--muted:#6b7585;--input-bg:#1e2a3a;--input-border:#2a3a4a}
+[data-theme="light"]{--bg:#f5f7fa;--card:#ffffff;--border:#dce1e8;--text:#1a2332;--dim:#5a6878;--muted:#8494a7;--input-bg:#f0f2f5;--input-border:#c5cdd8;--done:#3a8a5a;--warn:#a48a3a}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Karla',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:0;transition:background .3s,color .3s;height:100vh;overflow:hidden}
 #loading{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:12px}
@@ -54,22 +54,25 @@ body{font-family:'Karla',system-ui,sans-serif;background:var(--bg);color:var(--t
 .doc-summary{color:var(--muted);font-style:italic}
 .doc-link{color:var(--pri);text-decoration:none;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:3px}
 .doc-link:hover{text-decoration:underline}
-.config-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.config-controls{display:flex;gap:14px;align-items:flex-start}
+.controls-left{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+.controls-right{flex:1;min-width:0}
 .status-group{display:flex;border:0.5px solid var(--border);border-radius:6px;overflow:hidden}
 .status-btn{background:transparent;border:none;border-right:0.5px solid var(--border);padding:4px 9px;cursor:pointer;font-size:10px;font-weight:500;font-family:'Karla',sans-serif;color:var(--dim);transition:all .15s}
 .status-btn:last-child{border-right:none}.status-btn:hover{color:var(--text)}
 .status-btn.s-done{background:rgba(74,154,106,.12);color:var(--done)}
 .status-btn.s-notdone{background:rgba(196,90,90,.1);color:var(--neg)}
 .status-btn.s-needsupdate{background:rgba(196,168,90,.1);color:var(--warn)}
-.date-input{background:var(--input-bg);border:1px solid var(--input-border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:'Inconsolata',monospace;font-size:12px;transition:border-color .2s}
-.date-input::-webkit-calendar-picker-indicator{filter:var(--date-icon-filter);cursor:pointer;opacity:.6}
-.date-input::-webkit-calendar-picker-indicator:hover{opacity:1}
-.date-input:not([value]),.date-input[value=""]{color:var(--muted)}
-.date-input:focus{outline:none;border-color:var(--pri)}
-.staleness{font-size:12px;color:var(--muted);font-family:'Inconsolata',monospace}
+.date-row{display:flex;align-items:center;gap:5px;padding-left:2px}
+.date-label{font-size:9px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);font-weight:500}
+.date-val{font-size:11px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);font-family:'Karla',sans-serif}
+.date-val:hover{border-color:var(--text)}
+.date-val.empty{color:var(--muted);font-style:italic;border-style:dashed}
+.date-hidden{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+.staleness{font-size:9px;color:var(--muted);font-family:'Inconsolata',monospace}
 .staleness.stale{color:var(--warn)}
 .staleness.very-stale{color:var(--neg)}
-.notes-input{background:var(--input-bg);border:1px solid var(--input-border);border-radius:5px;padding:4px 8px;color:var(--text);font-family:'Karla',sans-serif;font-size:13px;width:100%;margin-top:8px;transition:border-color .2s}
+.notes-input{background:transparent;border:none;border-left:2px solid var(--border);padding:4px 0 4px 10px;color:var(--text);font-family:'Karla',sans-serif;font-size:11px;width:100%;min-height:38px;resize:none;line-height:1.4;transition:border-color .2s}
 .notes-input:focus{outline:none;border-color:var(--pri)}
 .notes-input::placeholder{color:var(--muted)}
 .empty-state{display:flex;align-items:center;justify-content:center;height:100%;color:var(--dim);font-size:16px;flex-direction:column;gap:8px}
@@ -188,7 +191,9 @@ function renderConfigs(siteId){
     let sh='';if(st.Last_Applied){const days=Math.round((Date.now()/1000-st.Last_Applied)/86400);sh=`<span class="staleness ${days>90?'very-stale':days>30?'stale':''}">${days}d ago</span>`}
     let dh='';if(ci.Doc_Summary||ci.Doc_URL){dh='<div class="config-doc">';if(ci.Doc_Summary)dh+='<span class="doc-summary">'+ci.Doc_Summary+'</span>';if(ci.Doc_URL)dh+='<a class="doc-link" href="'+ci.Doc_URL+'" target="_blank"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Docs</a>';dh+='</div>'}
     const esc=s=>(s||'').replace(/'/g,"\\'");
-    h+=`<div class="config-card"><div class="config-top"><div class="config-name">${ci.Name}</div><span class="config-level">${ci.Level||''}</span></div>${ci.Description?'<div class="config-desc">'+ci.Description+'</div>':''}${dh}<div class="config-controls"><div class="status-group"><button class="status-btn${st.Status==='Done'?' s-done':''}" onclick="setStatus(${st._id},${siteId},${st.Config_Item},'Done','${esc(st.Status)}')">Done</button><button class="status-btn${st.Status==='Not Done'?' s-notdone':''}" onclick="setStatus(${st._id},${siteId},${st.Config_Item},'Not Done','${esc(st.Status)}')">Not Done</button><button class="status-btn${st.Status==='Needs Update'?' s-needsupdate':''}" onclick="setStatus(${st._id},${siteId},${st.Config_Item},'Needs Update','${esc(st.Status)}')">Needs Update</button></div><input type="date" class="date-input" value="${dv}" onchange="setDate(${st._id},${siteId},${st.Config_Item},this.value,'${dv}')" title="Last applied"> ${sh}</div><input type="text" class="notes-input" value="${(st.Notes||'').replace(/"/g,'&quot;')}" placeholder="Notes\u2026" oninput="debouncedSetNotes(${st._id},${siteId},${st.Config_Item},this.value)"></div>`});
+    const fmtDt=dv=>{if(!dv)return'';const[y,m,d]=dv.split('-');const M=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return M[+m]+' '+parseInt(d)+', '+y};
+    const dateDisplay=dv?fmtDt(dv):'';
+    h+=`<div class="config-card"><div class="config-top"><div class="config-name">${ci.Name}</div><span class="config-level">${ci.Level||''}</span></div>${ci.Description?'<div class="config-desc">'+ci.Description+'</div>':''}${dh}<div class="config-controls"><div class="controls-left"><div class="status-group"><button class="status-btn${st.Status==='Done'?' s-done':''}" onclick="setStatus(${st._id},${siteId},${st.Config_Item},'Done','${esc(st.Status)}')">Done</button><button class="status-btn${st.Status==='Not Done'?' s-notdone':''}" onclick="setStatus(${st._id},${siteId},${st.Config_Item},'Not Done','${esc(st.Status)}')">Not Done</button><button class="status-btn${st.Status==='Needs Update'?' s-needsupdate':''}" onclick="setStatus(${st._id},${siteId},${st.Config_Item},'Needs Update','${esc(st.Status)}')">Needs Update</button></div><div class="date-row"><span class="date-label">Applied</span><span class="date-val${dv?'':' empty'}" onclick="this.nextElementSibling.showPicker?this.nextElementSibling.showPicker():this.nextElementSibling.focus()">${dateDisplay||'Set date'}</span><input type="date" class="date-hidden" value="${dv}" onchange="setDate(${st._id},${siteId},${st.Config_Item},this.value,'${dv}')"> ${sh}</div></div><div class="controls-right"><textarea class="notes-input" placeholder="Notes\u2026" oninput="debouncedSetNotes(${st._id},${siteId},${st.Config_Item},this.value)">${(st.Notes||'').replace(/</g,'&lt;')}</textarea></div></div></div>`});
   el.innerHTML=h;
 }
 function renderLog(siteId){
