@@ -13,29 +13,29 @@ body{font-family:'Nunito Sans',system-ui,sans-serif;background:var(--bg);color:v
 #loading{display:flex;align-items:center;justify-content:center;height:60vh;flex-direction:column;gap:12px}
 .spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--pri);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-#loading p{color:var(--dim);font-size:15px}
+#loading p{color:var(--dim);font-size:14px}
 #dash{display:none}
 .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
-h1{font-size:25px;font-weight:700;letter-spacing:-.3px}
-.sub{font-size:15px;color:var(--dim);margin-top:4px}
-.theme-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:15px;color:var(--dim);font-family:'Nunito Sans',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px}
+h1{font-size:24px;font-weight:700;letter-spacing:-.3px}
+.sub{font-size:14px;color:var(--dim);margin-top:4px}
+.theme-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:14px;color:var(--dim);font-family:'Nunito Sans',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px}
 .theme-btn:hover{border-color:var(--pri);color:var(--text)}
 .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .sc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;flex:1 1 0;min-width:120px}
 .sc-l{font-size:11px;text-transform:uppercase;letter-spacing:1.1px;color:var(--dim);margin-bottom:6px}
-.sc-v{font-size:30px;font-weight:700;line-height:1.1}
+.sc-v{font-size:29px;font-weight:700;line-height:1.1}
 .sc-s{font-size:13px;color:var(--muted);margin-top:4px}
-.stitle{display:flex;align-items:center;gap:8px;margin:28px 0 14px;font-size:17px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.stitle{display:flex;align-items:center;gap:8px;margin:28px 0 14px;font-size:16px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
 .stitle svg{flex-shrink:0;opacity:.85}
 .two{display:flex;gap:14px;flex-wrap:wrap}.two>.half{flex:1 1 300px}
 .cc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;transition:background .3s,border-color .3s}
 .mono{font-family:'Fira Mono',monospace}
 .footer{margin-top:28px;padding-top:14px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);display:flex;justify-content:space-between}
 .server-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px}
-.server-name{font-size:18px;font-weight:700;margin-bottom:2px}
+.server-name{font-size:17px;font-weight:700;margin-bottom:2px}
 .server-meta{font-size:13px;color:var(--dim);margin-bottom:10px}
 .server-sites{display:flex;flex-direction:column;gap:6px}
-.ssite{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(90,130,181,.04);border-radius:6px;font-size:14px}
+.ssite{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(90,130,181,.04);border-radius:6px;font-size:13px}
 .ssite-name{font-weight:600}
 .ssite-url{font-size:13px;color:var(--dim);font-family:'Fira Mono',monospace}
 .ssite-badges{display:flex;gap:6px;align-items:center}
@@ -48,30 +48,30 @@ h1{font-size:25px;font-weight:700;letter-spacing:-.3px}
 .badge-inactive{background:rgba(139,149,165,.08);color:var(--muted)}
 .config-pct{font-size:13px;font-weight:600;font-family:'Fira Mono',monospace}
 .domain-group{margin-bottom:14px}
-.domain-group-hdr{font-size:15px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.domain-group-hdr{font-size:14px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .domain-group-count{font-size:13px;color:var(--dim);font-weight:400}
 .domain-list{display:flex;flex-wrap:wrap;gap:4px}
 .domain-tag{font-size:13px;font-family:'Fira Mono',monospace;padding:3px 8px;border-radius:4px;background:rgba(90,130,181,.06);border:1px solid var(--border);color:var(--dim)}
 .config-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
 .config-row:last-child{border-bottom:none}
-.config-item-name{font-size:15px;font-weight:600}
+.config-item-name{font-size:14px;font-weight:600}
 .config-bar-wrap{display:flex;align-items:center;gap:8px;min-width:200px}
 .config-bar{background:var(--border);border-radius:4px;height:8px;flex:1;overflow:hidden}
 .config-bar-fill{height:100%;border-radius:4px;transition:width .3s}
 .config-bar-label{font-size:13px;font-family:'Fira Mono',monospace;color:var(--dim);min-width:45px;text-align:right}
 .needs-attn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
-.needs-attn-name{font-size:15px;font-weight:600}
+.needs-attn-name{font-size:14px;font-weight:600}
 .needs-attn-url{font-size:13px;color:var(--dim);font-family:'Fira Mono',monospace}
-.needs-attn-score{font-size:14px;font-weight:700;font-family:'Fira Mono',monospace}
+.needs-attn-score{font-size:13px;font-weight:700;font-family:'Fira Mono',monospace}
 .activity-feed{display:flex;flex-direction:column;gap:4px}
 .activity-entry{font-size:13px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:6px;display:flex;gap:10px;align-items:baseline}
 .activity-time{color:var(--muted);font-family:'Fira Mono',monospace;font-size:12px;white-space:nowrap;min-width:75px}
 .activity-site{color:var(--pri);font-weight:600;white-space:nowrap}
 .activity-action{color:var(--text)}
 .activity-detail{color:var(--dim);font-family:'Fira Mono',monospace;margin-left:auto;white-space:nowrap}
-.activity-empty{font-size:14px;color:var(--muted);font-style:italic;padding:8px 0}
+.activity-empty{font-size:13px;color:var(--muted);font-style:italic;padding:8px 0}
 .expiry-warn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
-.expiry-domain{font-size:15px;font-weight:600;font-family:'Fira Mono',monospace}
+.expiry-domain{font-size:14px;font-weight:600;font-family:'Fira Mono',monospace}
 .expiry-date{font-size:13px;font-family:'Fira Mono',monospace}
 .expiry-soon{color:var(--neg)}
 .expiry-upcoming{color:var(--warn)}
