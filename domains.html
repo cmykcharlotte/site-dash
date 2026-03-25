@@ -5,11 +5,11 @@
 <title>Domain Map</title>
 <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap');
 :root{--bg:#111826;--card:#172030;--border:#1e2a3a;--pri:#5a82b5;--sec:#c4785a;--pos:#5a9fc4;--neg:#c45a5a;--done:#4a9a6a;--warn:#c4a85a;--text:#d0d7de;--dim:#8b95a5;--muted:#6b7585;--tree-line:#2a3a4a;--input-bg:#1e2a3a;--input-border:#2a3a4a;--highlight:rgba(196,168,90,.15)}
 [data-theme="light"]{--bg:#f5f7fa;--card:#ffffff;--border:#dce1e8;--text:#1a2332;--dim:#5a6878;--muted:#8494a7;--done:#3a8a5a;--warn:#a48a3a;--tree-line:#c5cdd8;--input-bg:#f0f2f5;--input-border:#c5cdd8;--highlight:rgba(196,168,90,.12)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Source Sans 3',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:24px 28px 48px;transition:background .3s,color .3s}
+body{font-family:'Roboto',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:24px 28px 48px;transition:background .3s,color .3s}
 #loading{display:flex;align-items:center;justify-content:center;height:60vh;flex-direction:column;gap:12px}
 .spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--pri);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -19,9 +19,9 @@ body{font-family:'Source Sans 3',system-ui,sans-serif;background:var(--bg);color
 h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
 .sub{font-size:13px;color:var(--dim);margin-top:4px}
 .hdr-right{display:flex;gap:8px;align-items:center}
-.theme-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--dim);font-family:'Source Sans 3',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px}
+.theme-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--dim);font-family:'Roboto',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px}
 .theme-btn:hover{border-color:var(--pri);color:var(--text)}
-.search-box{background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;padding:6px 12px;color:var(--text);font-family:'Source Code Pro',monospace;font-size:13px;width:220px;transition:border-color .2s}
+.search-box{background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;padding:6px 12px;color:var(--text);font-family:'Roboto Mono',monospace;font-size:13px;width:220px;transition:border-color .2s}
 .search-box:focus{outline:none;border-color:var(--pri)}
 .search-box::placeholder{color:var(--muted)}
 .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
@@ -34,7 +34,7 @@ h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
 .tree-site{font-size:11px;color:var(--dim);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .tree-site-name{font-weight:600;color:var(--pri)}
 .primary-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.primary-domain{font-size:17px;font-weight:700;font-family:'Source Code Pro',monospace;color:var(--text)}
+.primary-domain{font-size:17px;font-weight:700;font-family:'Roboto Mono',monospace;color:var(--text)}
 .role-tag{font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
 .role-primary{background:rgba(90,130,181,.12);color:var(--pri)}
 .role-redirect{background:rgba(196,120,90,.1);color:var(--sec)}
@@ -43,15 +43,15 @@ h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
 .branches{margin-top:8px;padding-left:24px;border-left:2px solid var(--tree-line)}
 .branch{position:relative;padding:6px 0 6px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .branch::before{content:'';position:absolute;left:-2px;top:50%;width:18px;height:0;border-top:2px solid var(--tree-line)}
-.branch-domain{font-size:13px;font-family:'Source Code Pro',monospace;font-weight:500;color:var(--text)}
-.branch-target{font-size:11px;color:var(--muted);font-family:'Source Code Pro',monospace}
+.branch-domain{font-size:13px;font-family:'Roboto Mono',monospace;font-weight:500;color:var(--text)}
+.branch-target{font-size:11px;color:var(--muted);font-family:'Roboto Mono',monospace}
 .branch-arrow{color:var(--muted);font-size:11px}
 .highlight{background:var(--highlight);border-radius:2px;padding:0 2px}
 .orphan-section{margin-top:24px}
 .orphan-hdr{font-size:15px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .orphan-hdr svg{opacity:.85}
 .parked-grid{display:flex;flex-wrap:wrap;gap:6px}
-.parked-tag{font-size:12px;font-family:'Source Code Pro',monospace;padding:5px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border);color:var(--dim);transition:background .2s}
+.parked-tag{font-size:12px;font-family:'Roboto Mono',monospace;padding:5px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border);color:var(--dim);transition:background .2s}
 .parked-tag.search-match{background:var(--highlight);border-color:var(--warn);color:var(--text)}
 .no-site{color:var(--muted);font-style:italic;font-size:11px}
 .count-badge{font-size:11px;color:var(--muted);font-weight:400}
